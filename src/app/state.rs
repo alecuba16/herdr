@@ -1108,7 +1108,7 @@ impl ContextMenuState {
                 ..
             } => &[
                 "Rename",
-                "Close group",
+                "Close",
                 "New worktree",
                 "Open worktree...",
                 "Expand",
@@ -1120,7 +1120,7 @@ impl ContextMenuState {
                 ..
             } => &[
                 "Rename",
-                "Close group",
+                "Close",
                 "New worktree",
                 "Open worktree...",
                 "Collapse",
@@ -2255,7 +2255,7 @@ mod tests {
             menu.items(),
             &[
                 "Rename",
-                "Close group",
+                "Close",
                 "New worktree",
                 "Open worktree...",
                 "Collapse"

@@ -324,15 +324,7 @@ pub(crate) fn workspace_list_entries(app: &AppState) -> Vec<WorkspaceListEntry> 
     }
     let grouped_keys = members_by_key
         .iter()
-        .filter(|(_, members)| {
-            members.len() >= 2
-                && members.iter().any(|idx| {
-                    app.workspaces
-                        .get(*idx)
-                        .and_then(|ws| ws.worktree_space())
-                        .is_some_and(|space| !space.is_linked_worktree)
-                })
-        })
+        .filter(|(_, members)| members.len() >= 2)
         .map(|(key, _)| key.clone())
         .collect::<std::collections::HashSet<_>>();
 
@@ -369,18 +361,16 @@ pub(crate) fn workspace_list_entries(app: &AppState) -> Vec<WorkspaceListEntry> 
         let Some(members) = members_by_key.get(&space.key) else {
             continue;
         };
-        let Some(parent_idx) = members.iter().copied().find(|idx| {
-            app.workspaces
-                .get(*idx)
-                .and_then(|member| member.worktree_space())
-                .is_some_and(|member_space| !member_space.is_linked_worktree)
-        }) else {
-            entries.push(WorkspaceListEntry::Workspace {
-                ws_idx,
-                indented: false,
-            });
-            continue;
-        };
+        let parent_idx = members
+            .iter()
+            .copied()
+            .find(|idx| {
+                app.workspaces
+                    .get(*idx)
+                    .and_then(|member| member.worktree_space())
+                    .is_some_and(|member_space| !member_space.is_linked_worktree)
+            })
+            .unwrap_or(ws_idx);
         let collapsed = app.collapsed_space_keys.contains(&space.key);
         entries.push(WorkspaceListEntry::Workspace {
             ws_idx: parent_idx,
@@ -1513,7 +1503,7 @@ mod tests {
     }
 
     #[test]
-    fn linked_only_worktree_members_do_not_form_parentless_group() {
+    fn linked_only_worktree_members_form_parentless_group() {
         let mut app = AppState::test_new();
         app.workspaces = vec![
             workspace_with_worktree_space("issue", Some("repo-key"), "/repo/herdr-issue"),
@@ -1531,7 +1521,7 @@ mod tests {
                 },
                 WorkspaceListEntry::Workspace {
                     ws_idx: 1,
-                    indented: false
+                    indented: true
                 },
             ]
         );

@@ -713,7 +713,7 @@ pub(super) fn apply_context_menu_action(
         }
         (
             ContextMenuKind::Workspace { ws_idx } | ContextMenuKind::GitWorkspace { ws_idx, .. },
-            Some("Close" | "Close group"),
+            Some("Close"),
         ) => {
             state.selected = ws_idx;
             if state.confirm_close {
@@ -1392,7 +1392,7 @@ mod tests {
     }
 
     #[test]
-    fn context_menu_close_group_opens_group_close_confirmation() {
+    fn context_menu_close_parent_group_workspace_keeps_children() {
         let mut state = state_with_workspaces(&["main", "issue"]);
         state.active = Some(0);
         state.selected = 1;
@@ -1430,12 +1430,13 @@ mod tests {
 
         confirm_close_accept(&mut state);
 
-        assert!(state.workspaces.is_empty());
-        assert_eq!(state.mode, Mode::Navigate);
+        assert_eq!(state.workspaces.len(), 1);
+        assert_eq!(state.workspaces[0].display_name(), "issue");
+        assert_eq!(state.mode, Mode::Terminal);
     }
 
     #[test]
-    fn context_menu_close_pane_last_parent_group_pane_keeps_confirmation_mode() {
+    fn context_menu_close_pane_last_parent_group_pane_closes_parent_only() {
         let mut state = state_with_workspaces(&["main", "issue"]);
         state.active = Some(0);
         state.selected = 1;
@@ -1475,8 +1476,7 @@ mod tests {
 
         apply_context_menu_action(&mut state, &mut terminal_runtimes, menu, idx);
 
-        assert_eq!(state.selected, 0);
-        assert_eq!(state.mode, Mode::ConfirmClose);
-        assert_eq!(state.workspaces.len(), 2);
+        assert_eq!(state.workspaces.len(), 1);
+        assert_eq!(state.workspaces[0].display_name(), "issue");
     }
 }

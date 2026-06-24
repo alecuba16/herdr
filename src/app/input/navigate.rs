@@ -1974,7 +1974,7 @@ last_pane = "prefix+tab"
     }
 
     #[test]
-    fn prefix_close_pane_last_parent_group_pane_opens_confirmation() {
+    fn prefix_close_pane_last_parent_group_pane_closes_parent_only() {
         let mut state = state_with_workspaces(&["main", "issue"]);
         mark_worktree_space_member(&mut state, 0, "repo-key");
         mark_worktree_space_member(&mut state, 1, "repo-key");
@@ -1984,9 +1984,8 @@ last_pane = "prefix+tab"
 
         execute_navigate_action(&mut state, NavigateAction::ClosePane);
 
-        assert_eq!(state.selected, 0);
-        assert_eq!(state.mode, Mode::ConfirmClose);
-        assert_eq!(state.workspaces.len(), 2);
+        assert_eq!(state.workspaces.len(), 1);
+        assert_eq!(state.workspaces[0].display_name(), "issue");
     }
 
     #[cfg(unix)]
