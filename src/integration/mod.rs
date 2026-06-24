@@ -6043,6 +6043,10 @@ mod tests {
         assert!(OPENCODE_PLUGIN_ASSET.contains("params.agent_session_id = sessionID"));
         assert!(OPENCODE_PLUGIN_ASSET.contains("pane.report_agent_session"));
         assert!(OPENCODE_PLUGIN_ASSET.contains("reportState"));
+        assert!(OPENCODE_PLUGIN_ASSET.contains("status?.type"));
+        assert!(OPENCODE_PLUGIN_ASSET.contains("idle: \"idle\""));
+        assert!(OPENCODE_PLUGIN_ASSET.contains("busy: \"working\""));
+        assert!(OPENCODE_PLUGIN_ASSET.contains("retry: \"blocked\""));
         assert!(!OPENCODE_PLUGIN_ASSET.contains("pane.release_agent"));
         assert!(KILO_PLUGIN_ASSET.contains("SOURCE = \"herdr:kilo\""));
         assert!(KILO_PLUGIN_ASSET.contains("AGENT = \"kilo\""));

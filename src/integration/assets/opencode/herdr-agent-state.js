@@ -10,6 +10,20 @@ const SOURCE = "herdr:opencode";
 const AGENT = "opencode";
 let reportSeq = Date.now() * 1000;
 
+const SESSION_STATUS_STATE = {
+  idle: "idle",
+  busy: "working",
+  retry: "blocked",
+};
+
+const LEGACY_SESSION_STATUS_STATE = {
+  active: "working",
+  pending: "working",
+  running: "working",
+  streaming: "working",
+  working: "working",
+};
+
 // Subagent (task tool) sessions carry a parentID; the main agent session does
 // not. Their lifecycle events would otherwise clobber the pane's real state, so
 // learn child session ids from session.created/updated and drop their reports.
@@ -27,22 +41,12 @@ function sessionIDFromProperties(properties) {
 }
 
 function stateFromSessionStatus(status) {
-  if (typeof status !== "string") {
+  const type = typeof status === "string" ? status : status?.type;
+  if (typeof type !== "string") {
     return undefined;
   }
-  switch (status.toLowerCase()) {
-    case "idle":
-      return "idle";
-    case "active":
-    case "busy":
-    case "pending":
-    case "running":
-    case "streaming":
-    case "working":
-      return "working";
-    default:
-      return undefined;
-  }
+  const normalized = type.toLowerCase();
+  return SESSION_STATUS_STATE[normalized] ?? LEGACY_SESSION_STATUS_STATE[normalized];
 }
 
 function request(method, params) {
