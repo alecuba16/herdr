@@ -894,7 +894,7 @@ pub struct ExperimentalConfig {
     /// list means apply to any focused pane. Unknown agent names are ignored;
     /// if the list contains no valid names, the reveal does not apply.
     /// Accepted names: pi, claude, codex, gemini, cursor, devin, cline,
-    /// opencode, copilot, kimi, kiro, droid, amp, grok, hermes, kilo,
+    /// opencode, copilot, kimi, kiro, droid, amp, grok, hermes, jcode, kilo,
     /// qodercli, qoder.
     /// Default: empty.
     pub cjk_ime_agents: Vec<String>,
