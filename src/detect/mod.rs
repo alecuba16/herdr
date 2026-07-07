@@ -62,10 +62,11 @@ pub enum Agent {
     Kilo,
     Qodercli,
     Maki,
+    Jcode,
 }
 
 impl Agent {
-    pub const SCREEN_MANIFEST_AGENTS: [Self; 19] = [
+    pub const SCREEN_MANIFEST_AGENTS: [Self; 20] = [
         Self::Pi,
         Self::Claude,
         Self::Codex,
@@ -85,6 +86,7 @@ impl Agent {
         Self::Kilo,
         Self::Qodercli,
         Self::Maki,
+        Self::Jcode,
     ];
 }
 
@@ -111,6 +113,7 @@ pub fn agent_label(agent: Agent) -> &'static str {
         Agent::Kilo => "kilo",
         Agent::Qodercli => "qodercli",
         Agent::Maki => "maki",
+        Agent::Jcode => "jcode",
     }
 }
 
@@ -147,6 +150,7 @@ fn lookup_agent(name: &str) -> Option<Agent> {
         "kilo" | "kilo-code" | "kilo code" => Some(Agent::Kilo),
         "qodercli" | "qoderclicn" | "qoder" | "qodercn" => Some(Agent::Qodercli),
         "maki" => Some(Agent::Maki),
+        "jcode" => Some(Agent::Jcode),
         _ => None,
     }
 }
@@ -632,6 +636,7 @@ mod tests {
         assert_eq!(identify_agent("kilo"), Some(Agent::Kilo));
         assert_eq!(identify_agent("kilo-code"), Some(Agent::Kilo));
         assert_eq!(identify_agent("maki"), Some(Agent::Maki));
+        assert_eq!(identify_agent("jcode"), Some(Agent::Jcode));
     }
 
     #[test]
@@ -658,6 +663,7 @@ mod tests {
         assert_eq!(parse_agent_label("hermes-agent"), Some(Agent::Hermes));
         assert_eq!(parse_agent_label("maki"), Some(Agent::Maki));
         assert_eq!(parse_agent_label("kilo-code"), Some(Agent::Kilo));
+        assert_eq!(parse_agent_label("jcode"), Some(Agent::Jcode));
     }
 
     #[test]
@@ -684,6 +690,7 @@ mod tests {
             Agent::Kilo,
             Agent::Qodercli,
             Agent::Maki,
+            Agent::Jcode,
         ];
 
         for agent in agents {
@@ -699,6 +706,96 @@ mod tests {
         assert_eq!(parse_canonical_agent_label("Pi"), None);
         assert_eq!(parse_canonical_agent_label(" pi "), None);
         assert_eq!(parse_canonical_agent_label("opencode.exe"), None);
+    }
+
+    #[test]
+    fn jcode_screen_manifest_detects_visible_states() {
+        let blocked = detect_agent(
+            Some(Agent::Jcode),
+            "Approve?\n❯ Allow\n  Reject\nEsc to cancel",
+        );
+        assert_eq!(blocked.state, AgentState::Blocked);
+        assert!(blocked.visible_blocker);
+
+        let permission_blocked = detect_agent(
+            Some(Agent::Jcode),
+            "Permission request\nRun shell command?\n❯ Allow once\n  Deny",
+        );
+        assert_eq!(permission_blocked.state, AgentState::Blocked);
+        assert!(permission_blocked.visible_blocker);
+
+        let question_blocked = detect_agent(
+            Some(Agent::Jcode),
+            "Asking user\nEnter your response to continue",
+        );
+        assert_eq!(question_blocked.state, AgentState::Blocked);
+        assert!(question_blocked.visible_blocker);
+
+        let working = detect_agent(Some(Agent::Jcode), "⠋ Processing request");
+        assert_eq!(working.state, AgentState::Working);
+        assert!(working.visible_working);
+
+        let tool_working = detect_agent(Some(Agent::Jcode), "Running tool bash");
+        assert_eq!(tool_working.state, AgentState::Working);
+        assert!(tool_working.visible_working);
+
+        let tool_bar_working = detect_agent(Some(Agent::Jcode), "··● bash ●·· · 12s");
+        assert_eq!(tool_bar_working.state, AgentState::Working);
+        assert!(tool_bar_working.visible_working);
+
+        let clipped_bash_tool_bar = detect_agent(Some(Agent::Jcode), "··● bash ●··");
+        assert_eq!(clipped_bash_tool_bar.state, AgentState::Working);
+        assert!(clipped_bash_tool_bar.visible_working);
+
+        let batch_tool_working = detect_agent(
+            Some(Agent::Jcode),
+            "●·· batch ··● · 2/5 done · last done: read · 1m 3s",
+        );
+        assert_eq!(batch_tool_working.state, AgentState::Working);
+        assert!(batch_tool_working.visible_working);
+
+        let clipped_batch_tool_bar = detect_agent(Some(Agent::Jcode), "●·· batch ··● · 2/5 done");
+        assert_eq!(clipped_batch_tool_bar.state, AgentState::Working);
+        assert!(clipped_batch_tool_bar.visible_working);
+
+        let network_waiting = detect_agent(
+            Some(Agent::Jcode),
+            "↻ network disconnected, waiting to retry · websocket · 8s",
+        );
+        assert_eq!(network_waiting.state, AgentState::Working);
+        assert!(network_waiting.visible_working);
+
+        let idle = detect_agent(Some(Agent::Jcode), "jcode\n❯ ");
+        assert_eq!(idle.state, AgentState::Idle);
+        assert!(idle.visible_idle);
+
+        let deny_transcript = detect_agent(
+            Some(Agent::Jcode),
+            "We should deny this assumption in the explanation.\n❯ ",
+        );
+        assert_eq!(deny_transcript.state, AgentState::Idle);
+        assert!(!deny_transcript.visible_blocker);
+
+        let stale_permission_text = detect_agent(
+            Some(Agent::Jcode),
+            "Permission request\n❯ Allow once\n  Deny\nold response line 1\nold response line 2\nold response line 3\nold response line 4\nold response line 5\nold response line 6\nold response line 7\nold response line 8\n❯ ",
+        );
+        assert_eq!(stale_permission_text.state, AgentState::Idle);
+        assert!(!stale_permission_text.visible_blocker);
+
+        let stale_processing_text = detect_agent(
+            Some(Agent::Jcode),
+            "Processing request\nold response line 1\nold response line 2\nold response line 3\nold response line 4\n❯ ",
+        );
+        assert_eq!(stale_processing_text.state, AgentState::Idle);
+        assert!(!stale_processing_text.visible_working);
+
+        let stale_tool_bar = detect_agent(
+            Some(Agent::Jcode),
+            "··● bash ●·· · 12s\nold response line 1\nold response line 2\nold response line 3\nold response line 4\n❯ ",
+        );
+        assert_eq!(stale_tool_bar.state, AgentState::Idle);
+        assert!(!stale_tool_bar.visible_working);
     }
 
     #[test]

@@ -1,0 +1,76 @@
+id = "jcode"
+version = "2026.07.03.1"
+min_engine_version = 1
+updated_at = "2026-07-03T00:00:00Z"
+
+[[rules]]
+id = "permission_choice_blocker"
+state = "blocked"
+priority = 300
+region = "bottom_non_empty_lines(8)"
+visible_blocker = true
+any = [
+  { contains = ["permission"], all = [{ any = [{ contains = ["allow once"] }, { contains = ["always allow"] }, { contains = ["allow"] }] }, { any = [{ contains = ["deny"] }, { contains = ["reject"] }, { contains = ["cancel"] }] }] },
+  { contains = ["approve?"], all = [{ any = [{ contains = ["allow"] }, { contains = ["yes"] }] }, { any = [{ contains = ["reject"] }, { contains = ["no"] }, { contains = ["cancel"] }] }] },
+  { contains = ["confirm action"], all = [{ any = [{ contains = ["allow"] }, { contains = ["yes"] }, { contains = ["proceed"] }] }, { any = [{ contains = ["reject"] }, { contains = ["no"] }, { contains = ["cancel"] }] }] },
+]
+
+[[rules]]
+id = "question_input_blocker"
+state = "blocked"
+priority = 290
+region = "bottom_non_empty_lines(6)"
+visible_blocker = true
+any = [
+  { contains = ["enter your response"], any = [{ contains = ["continue"] }, { contains = ["submit"] }, { contains = ["cancel"] }] },
+  { contains = ["asking user"], any = [{ contains = ["enter your response"] }, { contains = ["awaiting input"] }, { contains = ["waiting for user"] }] },
+  { contains = ["awaiting input"], any = [{ contains = ["enter"] }, { contains = ["type"] }, { contains = ["respond"] }] },
+]
+
+[[rules]]
+id = "spinner_working"
+state = "working"
+priority = 100
+region = "bottom_non_empty_lines(3)"
+visible_working = true
+line_regex = ['^\s*[\u2800-\u28FF]\s+.*\p{Alphabetic}']
+
+[[rules]]
+id = "tool_bar_working"
+state = "working"
+priority = 95
+region = "bottom_non_empty_lines(4)"
+visible_working = true
+line_regex = [
+  '^\s*[·●]{3}\s+\S+\s+[·●]{3}(?:\s+·\s+.*)?$',
+]
+
+[[rules]]
+id = "tool_status_working"
+state = "working"
+priority = 90
+region = "bottom_non_empty_lines(4)"
+visible_working = true
+any = [
+  { contains = ["running tool"] },
+  { contains = ["executing tool"] },
+  { contains = ["network disconnected, waiting to retry"] },
+]
+
+[[rules]]
+id = "ready_prompt_idle"
+state = "idle"
+priority = 80
+region = "bottom_non_empty_lines(3)"
+visible_idle = true
+any = [
+  { contains = ["session ready"] },
+  { contains = ["ready for input"] },
+  { line_regex = ['^\s*❯\s*$'] },
+]
+not = [
+  { contains = ["processing"] },
+  { contains = ["embedding"] },
+  { contains = ["running tool"] },
+  { contains = ["executing"] },
+]
