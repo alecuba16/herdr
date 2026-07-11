@@ -40,7 +40,8 @@ pub(super) fn command() -> Command {
         .subcommand(terminal_command())
         .subcommand(session_command())
         .subcommand(integration_command())
-        .subcommand(plugin_command());
+        .subcommand(plugin_command())
+        .subcommand(reset_command());
     disable_auto_help(command)
 }
 
@@ -725,6 +726,11 @@ fn plugin_command() -> Command {
 
 fn current_pane_args() -> [Arg; 2] {
     [option("pane", "ID"), flag("current")]
+}
+
+fn reset_command() -> Command {
+    Command::new("reset")
+        .about("Reset the host terminal from stuck mouse, keyboard, or screen modes")
 }
 
 fn integration_target_arg() -> Arg {
