@@ -520,6 +520,7 @@ fn main() -> io::Result<()> {
         println!("       herdr wait <subcommand> ...");
         println!("       herdr session <subcommand> ...");
         println!("       herdr integration <subcommand> ...");
+        println!("       herdr reset");
         println!();
         println!("Common commands:");
         for (command, description) in [
@@ -586,6 +587,10 @@ fn main() -> io::Result<()> {
             (
                 "herdr integration <subcommand>",
                 "Manage built-in agent integrations",
+            ),
+            (
+                "herdr reset",
+                "Reset host terminal from stuck mouse/keyboard/screen modes",
             ),
         ] {
             println!("  {command:<32} {description}");

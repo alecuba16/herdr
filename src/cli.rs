@@ -76,6 +76,7 @@ pub fn maybe_run(args: &[String]) -> std::io::Result<CommandOutcome> {
         "wait" => run_wait_command(&args[2..])?,
         "integration" => integration::run_integration_command(&args[2..])?,
         "session" => run_session_command(&args[2..])?,
+        "reset" => run_reset_command(&args[2..])?,
         _ => return Ok(CommandOutcome::NotCli),
     };
 
@@ -412,6 +413,23 @@ fn run_session_command(args: &[String]) -> std::io::Result<i32> {
             print_session_help();
             Ok(2)
         }
+    }
+}
+
+fn run_reset_command(args: &[String]) -> std::io::Result<i32> {
+    match args.first().map(|arg| arg.as_str()) {
+        Some("help" | "--help" | "-h") => {
+            eprintln!("usage: herdr reset");
+            eprintln!();
+            eprintln!("Disable all host terminal modes that herdr may have enabled:");
+            eprintln!("mouse tracking, focus events, bracketed paste, kitty keyboard,");
+            eprintln!("alternate screen, modifyOtherKeys, and cursor hiding.");
+            eprintln!();
+            eprintln!("Run this when your terminal is stuck after an abrupt disconnect");
+            eprintln!("or crash leaves mouse reporting or keyboard modes on.");
+            Ok(0)
+        }
+        _ => crate::terminal_modes::reset_host_terminal_modes().map(|()| 0),
     }
 }
 
