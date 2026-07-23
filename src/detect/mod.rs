@@ -731,9 +731,47 @@ mod tests {
         assert_eq!(question_blocked.state, AgentState::Blocked);
         assert!(question_blocked.visible_blocker);
 
+        // The jcode permissions viewer shows "Permissions" + "approve" + "deny"
+        // (not "allow"/"reject" like the inline prompt).
+        let permissions_viewer = detect_agent(
+            Some(Agent::Jcode),
+            " Permissions (2 pending) \n❯ ● [normal] Run shell command\n   rm -rf /tmp/test\n  ○ [low] Read file\n a  approve   d  deny   A  approve all   D  deny all",
+        );
+        assert_eq!(permissions_viewer.state, AgentState::Blocked);
+        assert!(permissions_viewer.visible_blocker);
+
         let working = detect_agent(Some(Agent::Jcode), "⠋ Processing request");
         assert_eq!(working.state, AgentState::Working);
         assert!(working.visible_working);
+
+        // jcode TUI renders spinner labels: "sending…", "thinking…", "connecting…", etc.
+        let sending_spinner = detect_agent(Some(Agent::Jcode), "⠋ sending… 0.3s");
+        assert_eq!(sending_spinner.state, AgentState::Working);
+        assert!(sending_spinner.visible_working);
+
+        let thinking_spinner = detect_agent(Some(Agent::Jcode), "⠙ thinking… 1.2s");
+        assert_eq!(thinking_spinner.state, AgentState::Working);
+        assert!(thinking_spinner.visible_working);
+
+        let connecting_spinner = detect_agent(Some(Agent::Jcode), "⠹ connecting… 0.5s");
+        assert_eq!(connecting_spinner.state, AgentState::Working);
+        assert!(connecting_spinner.visible_working);
+
+        let streaming_spinner = detect_agent(Some(Agent::Jcode), "⠸ 0.3s · ↑1.2k ↓500");
+        assert_eq!(streaming_spinner.state, AgentState::Working);
+        assert!(streaming_spinner.visible_working);
+
+        let streaming_stalled = detect_agent(Some(Agent::Jcode), "⠼ (stalled 15s) · 2.3s");
+        assert_eq!(streaming_stalled.state, AgentState::Working);
+        assert!(streaming_stalled.visible_working);
+
+        let refreshing_auth = detect_agent(Some(Agent::Jcode), "⠹ refreshing auth… 3s");
+        assert_eq!(refreshing_auth.state, AgentState::Working);
+        assert!(refreshing_auth.visible_working);
+
+        let retrying = detect_agent(Some(Agent::Jcode), "⠹ retrying 2/3… 5s");
+        assert_eq!(retrying.state, AgentState::Working);
+        assert!(retrying.visible_working);
 
         let tool_working = detect_agent(Some(Agent::Jcode), "Running tool bash");
         assert_eq!(tool_working.state, AgentState::Working);
@@ -782,6 +820,13 @@ mod tests {
         );
         assert_eq!(stale_permission_text.state, AgentState::Idle);
         assert!(!stale_permission_text.visible_blocker);
+
+        let stale_permissions_viewer = detect_agent(
+            Some(Agent::Jcode),
+            "Permissions (2 pending)\n❯ ● [normal] Run shell command\n a  approve   d  deny\nold response line 1\nold response line 2\nold response line 3\nold response line 4\nold response line 5\nold response line 6\nold response line 7\nold response line 8\n❯ ",
+        );
+        assert_eq!(stale_permissions_viewer.state, AgentState::Idle);
+        assert!(!stale_permissions_viewer.visible_blocker);
 
         let stale_processing_text = detect_agent(
             Some(Agent::Jcode),

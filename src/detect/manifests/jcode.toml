@@ -1,7 +1,7 @@
 id = "jcode"
-version = "2026.07.03.1"
+version = "2026.07.23.1"
 min_engine_version = 1
-updated_at = "2026-07-03T00:00:00Z"
+updated_at = "2026-07-23T00:00:00Z"
 
 [[rules]]
 id = "permission_choice_blocker"
@@ -11,6 +11,7 @@ region = "bottom_non_empty_lines(8)"
 visible_blocker = true
 any = [
   { contains = ["permission"], all = [{ any = [{ contains = ["allow once"] }, { contains = ["always allow"] }, { contains = ["allow"] }] }, { any = [{ contains = ["deny"] }, { contains = ["reject"] }, { contains = ["cancel"] }] }] },
+  { contains = ["permissions"], all = [{ any = [{ contains = ["approve"] }, { contains = ["allow"] }] }, { any = [{ contains = ["deny"] }, { contains = ["reject"] }] }] },
   { contains = ["approve?"], all = [{ any = [{ contains = ["allow"] }, { contains = ["yes"] }] }, { any = [{ contains = ["reject"] }, { contains = ["no"] }, { contains = ["cancel"] }] }] },
   { contains = ["confirm action"], all = [{ any = [{ contains = ["allow"] }, { contains = ["yes"] }, { contains = ["proceed"] }] }, { any = [{ contains = ["reject"] }, { contains = ["no"] }, { contains = ["cancel"] }] }] },
 ]
