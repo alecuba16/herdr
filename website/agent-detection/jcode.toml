@@ -1,7 +1,39 @@
 id = "jcode"
-version = "2026.07.03.1"
+version = "2026.07.24.1"
 min_engine_version = 1
-updated_at = "2026-07-03T00:00:00Z"
+updated_at = "2026-07-24T00:00:00Z"
+
+# --- OSC 9 progress rules (primary detection path, version-stable) ---
+# jcode emits `OSC 9 ;jcode:<state> BEL` on every full redraw when the
+# processing status changes. These rules win over all screen-scrape rules
+# because they carry a structured payload that cannot appear in conversation
+# text, eliminating false positives and stale-text issues.
+
+[[rules]]
+id = "osc_progress_working"
+state = "working"
+priority = 1100
+region = "osc_progress"
+visible_working = true
+contains = ["jcode:working"]
+
+[[rules]]
+id = "osc_progress_blocked"
+state = "blocked"
+priority = 1100
+region = "osc_progress"
+visible_blocker = true
+contains = ["jcode:blocked"]
+
+[[rules]]
+id = "osc_progress_idle"
+state = "idle"
+priority = 1100
+region = "osc_progress"
+visible_idle = true
+contains = ["jcode:idle"]
+
+# --- Screen-scrape fallback rules (lower priority, for terminals that strip OSC) ---
 
 [[rules]]
 id = "permission_choice_blocker"

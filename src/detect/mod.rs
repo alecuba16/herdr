@@ -844,6 +844,49 @@ mod tests {
     }
 
     #[test]
+    fn jcode_osc_progress_rules_detect_working_and_idle() {
+        // OSC 9 progress payload "jcode:working" → working state at highest priority.
+        let working = detect_agent_with_osc(
+            Some(Agent::Jcode),
+            "❯ ",
+            "jcode:working",
+            "",
+        );
+        assert_eq!(working.state, AgentState::Working);
+        assert!(working.visible_working);
+
+        // OSC 9 progress payload "jcode:idle" → idle state at highest priority.
+        let idle = detect_agent_with_osc(
+            Some(Agent::Jcode),
+            "⠋ sending… 0.3s",
+            "jcode:idle",
+            "",
+        );
+        assert_eq!(idle.state, AgentState::Idle);
+        assert!(idle.visible_idle);
+
+        // OSC 9 progress payload "jcode:blocked" → blocked state at highest priority.
+        let blocked = detect_agent_with_osc(
+            Some(Agent::Jcode),
+            "❯ ",
+            "jcode:blocked",
+            "",
+        );
+        assert_eq!(blocked.state, AgentState::Blocked);
+        assert!(blocked.visible_blocker);
+
+        // No OSC progress payload → falls back to screen-scrape rules.
+        let no_osc = detect_agent_with_osc(
+            Some(Agent::Jcode),
+            "⠋ sending… 0.3s",
+            "",
+            "",
+        );
+        assert_eq!(no_osc.state, AgentState::Working);
+        assert!(no_osc.visible_working);
+    }
+
+    #[test]
     fn mastracode_is_hook_authority_without_screen_manifest() {
         assert!(full_lifecycle_hook_authority(
             "herdr:mastracode",
